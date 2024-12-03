@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/scheduler.dart';
-import 'calendar_page.dart';
 
-class LoginPage extends StatelessWidget {
+class RegisterPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -11,7 +9,7 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('로그인 페이지'),
+        title: Text('회원가입 페이지'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -31,7 +29,7 @@ class LoginPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                  UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
                     email: emailController.text,
                     password: passwordController.text,
                   );
@@ -39,12 +37,13 @@ class LoginPage extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text('로그인 성공'),
-                        content: Text('환영합니다! 로그인에 성공했습니다.'),
+                        title: Text('회원가입 성공'),
+                        content: Text('환영합니다! 회원가입이 성공적으로 완료되었습니다.'),
                         actions: [
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
+                              Navigator.pushReplacementNamed(context, '/login'); // 로그인 페이지로 이동
                             },
                             child: Text('확인'),
                           ),
@@ -52,29 +51,20 @@ class LoginPage extends StatelessWidget {
                       );
                     },
                   );
-
-                  SchedulerBinding.instance.addPostFrameCallback((_) {
-                    Future.delayed(Duration(seconds: 2), () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => CalendarPage()), // CalendarPage로 이동
-                      );
-                    });
-                  });
                 } on FirebaseAuthException catch (e) {
                   String message;
-                  if (e.code == 'user-not-found') {
-                    message = '사용자를 찾을 수 없습니다.';
-                  } else if (e.code == 'wrong-password') {
-                    message = '잘못된 비밀번호입니다.';
+                  if (e.code == 'weak-password') {
+                    message = '비밀번호가 너무 약합니다.';
+                  } else if (e.code == 'email-already-in-use') {
+                    message = '이미 사용 중인 이메일입니다.';
                   } else {
-                    message = '로그인 중 오류가 발생했습니다.';
+                    message = '회원가입 중 오류가 발생했습니다.';
                   }
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text('로그인 실패'),
+                        title: Text('회원가입 실패'),
                         content: Text(message),
                         actions: [
                           TextButton(
@@ -89,7 +79,7 @@ class LoginPage extends StatelessWidget {
                   );
                 }
               },
-              child: Text('로그인'),
+              child: Text('회원가입'),
             ),
           ],
         ),
