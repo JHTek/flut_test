@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "flut_test"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "flut_test-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "530743672199",
+    "firebase_url": "https://logloglog-6a968-default-rtdb.firebaseio.com",
+    "project_id": "logloglog-6a968",
+    "storage_bucket": "logloglog-6a968.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530743672199:android:a4e10961cc9b276e916722",
+        "android_client_info": {
+          "package_name": "com.example.flut_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuM9VNpzwAS_kjZORIICoy4wV-SRgP89I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
