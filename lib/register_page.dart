@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatelessWidget {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -16,6 +18,10 @@ class RegisterPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: '이름'),
+            ),
             TextField(
               controller: emailController,
               decoration: InputDecoration(labelText: '이메일'),
@@ -33,6 +39,13 @@ class RegisterPage extends StatelessWidget {
                     email: emailController.text,
                     password: passwordController.text,
                   );
+
+                  // Firestore에 UID와 이메일, 이름 저장
+                  FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+                    'name': nameController.text,
+                    'email': emailController.text,
+                  });
+
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {

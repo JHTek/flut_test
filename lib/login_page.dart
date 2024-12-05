@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/scheduler.dart';
-import 'calendar_page.dart';
+import 'home.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -57,7 +57,7 @@ class LoginPage extends StatelessWidget {
                     Future.delayed(Duration(seconds: 2), () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => CalendarPage()), // CalendarPage로 이동
+                        MaterialPageRoute(builder: (context) => Home()), // CalendarPage로 이동
                       );
                     });
                   });
