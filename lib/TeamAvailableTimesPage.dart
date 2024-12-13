@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'TeamAvailableTimesPage.dart'; // TeamAvailableTimesPage import 추가
-import 'TeamSelectedTimesPage.dart'; // TeamSelectedTimesPage import 추가
 
-class TeamSchedulePage extends StatefulWidget {
+class TeamAvailableTimesPage extends StatefulWidget {
   final String teamId;
 
-  TeamSchedulePage({required this.teamId});
+  TeamAvailableTimesPage({required this.teamId});
 
   @override
-  _TeamSchedulePageState createState() => _TeamSchedulePageState();
+  _TeamAvailableTimesPageState createState() => _TeamAvailableTimesPageState();
 }
 
-class _TeamSchedulePageState extends State<TeamSchedulePage> {
+class _TeamAvailableTimesPageState extends State<TeamAvailableTimesPage> {
   final ScrollController _scrollController = ScrollController();
   int _weekOffset = 0;
   List<String> memberUids = [];
+  List<List<bool>> selectedTimes = List.generate(35, (row) => List.generate(7, (col) => false)); // 선택된 시간 저장
 
   @override
   void initState() {
@@ -71,7 +70,7 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
     });
   }
 
-  Future<List<List<bool>>> _getTeamSchedules(DateTime weekStart, DateTime weekEnd) async {
+  Future<List<List<bool>>> _getTeamAvailableTimes(DateTime weekStart, DateTime weekEnd) async {
     List<List<bool>> teamSelectedGrid = List.generate(35, (row) => List.generate(7, (col) => true));
 
     try {
@@ -85,11 +84,6 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
           .where('weekEnd.month', isEqualTo: weekEnd.month)
           .where('weekEnd.day', isEqualTo: weekEnd.day)
           .get();
-
-      if (schedulesSnapshot.docs.isEmpty) {
-        print('No schedules found for the specified week');
-        return teamSelectedGrid;
-      }
 
       for (var doc in schedulesSnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -115,6 +109,46 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
     return teamSelectedGrid;
   }
 
+  void _toggleTimeSelection(int row, int col) {
+    setState(() {
+      selectedTimes[row][col] = !selectedTimes[row][col];
+    });
+  }
+
+  void _saveSelectedTime() async {
+    DateTime weekStart = _getCurrentStartOfWeek();
+    DateTime weekEnd = _getCurrentEndOfWeek();
+
+    List<String> selectedTimeSlots = [];
+    for (int row = 0; row < 35; row++) {
+      for (int col = 0; col < 7; col++) {
+        if (selectedTimes[row][col]) {
+          selectedTimeSlots.add('(${row + 1}, ${col + 1})');
+        }
+      }
+    }
+
+    await FirebaseFirestore.instance.collection('team_meetings').add({
+      'teamId': widget.teamId,
+      'selectedTimeSlots': selectedTimeSlots,
+      'weekStart': {
+        'year': weekStart.year,
+        'month': weekStart.month,
+        'day': weekStart.day,
+      },
+      'weekEnd': {
+        'year': weekEnd.year,
+        'month': weekEnd.month,
+        'day': weekEnd.day,
+      },
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('선택된 시간이 저장되었습니다!')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime weekStart = _getCurrentStartOfWeek();
@@ -127,7 +161,7 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('팀 일정 페이지'),
+        title: Text('팀 가용 시간 추천'),
         backgroundColor: Colors.green,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -139,14 +173,13 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
       body: memberUids.isEmpty
           ? Center(child: CircularProgressIndicator())
           : FutureBuilder<List<List<bool>>>(
-        future: _getTeamSchedules(weekStart, weekEnd),
-        builder: (context, scheduleSnapshot) {
-          if (!scheduleSnapshot.hasData) {
+        future: _getTeamAvailableTimes(weekStart, weekEnd),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
 
-          List<List<bool>> teamSelectedGrid = scheduleSnapshot.data!;
-          bool hasOverlap = teamSelectedGrid.any((row) => row.contains(true));
+          List<List<bool>> availableTimes = snapshot.data!;
 
           return Column(
             children: [
@@ -178,64 +211,31 @@ class _TeamSchedulePageState extends State<TeamSchedulePage> {
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   scrollDirection: Axis.vertical,
-                  child: hasOverlap
-                      ? Column(
+                  child: Column(
                     children: List.generate(35, (row) {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(7, (col) {
-                          return Container(
-                            width: 50,
-                            height: 50,
-                            color: teamSelectedGrid[row][col] ? Colors.green : Colors.white,
-                            child: Center(child: Text('${timeSlots[row]}')),
+                          return GestureDetector(
+                            onTap: availableTimes[row][col] ? () => _toggleTimeSelection(row, col) : null,
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              color: availableTimes[row][col]
+                                  ? selectedTimes[row][col] ? Colors.blue : Colors.green
+                                  : Colors.grey,
+                              child: Center(child: Text('${timeSlots[row]}')),
+                            ),
                           );
                         }),
                       );
                     }),
-                  )
-                      : Center(
-                    child: Text(
-                      '팀원끼리의 겹치는 시간이 없습니다! 일정을 조율하세요!',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                    ),
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TeamAvailableTimesPage(teamId: widget.teamId),
-                          ),
-                        );
-                      },
-                      child: Text('가용 시간 추천 받기'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TeamSelectedTimesPage(teamId: widget.teamId),
-                          ),
-                        );
-                      },
-                      child: Text('선택한 가용 시간 보기'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Icon(Icons.edit),
-                    ),
-                  ],
-                ),
+              ElevatedButton(
+                onPressed: _saveSelectedTime,
+                child: Text('선택된 시간 저장하기'),
               ),
             ],
           );
