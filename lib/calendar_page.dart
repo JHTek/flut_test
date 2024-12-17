@@ -127,26 +127,62 @@ class _MyHomePageState extends State<MyHomePage> {
     DateTime weekStart = _getCurrentStartOfWeek();
     DateTime weekEnd = _getCurrentEndOfWeek();
 
-    await _firestore.collection('selected_cells').add({
-      'userId': _userId,
-      'cells': selectedCells,
-      'weekStart': {
-        'year': weekStart.year,
-        'month': weekStart.month,
-        'day': weekStart.day,
-      },
-      'weekEnd': {
-        'year': weekEnd.year,
-        'month': weekEnd.month,
-        'day': weekEnd.day,
-      },
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("데이터가 성공적으로 저장 되었습니다!"))
-    );
+    try {
+      // 기존 데이터 검색
+      QuerySnapshot querySnapshot = await _firestore.collection('selected_cells')
+          .where('userId', isEqualTo: _userId)
+          .where('weekStart.year', isEqualTo: weekStart.year)
+          .where('weekStart.month', isEqualTo: weekStart.month)
+          .where('weekStart.day', isEqualTo: weekStart.day)
+          .where('weekEnd.year', isEqualTo: weekEnd.year)
+          .where('weekEnd.month', isEqualTo: weekEnd.month)
+          .where('weekEnd.day', isEqualTo: weekEnd.day)
+          .get();
 
+      if (querySnapshot.docs.isNotEmpty) {
+        // 기존 데이터가 있는 경우
+        DocumentSnapshot existingDoc = querySnapshot.docs.first;
+        Map<String, dynamic> existingData = existingDoc.data() as Map<String, dynamic>;
+        List<dynamic> existingCells = existingData['cells'];
+
+        // 기존 셀과 새로운 셀을 합치고 중복 제거
+        Set<String> mergedCells = {...existingCells.map((cell) => cell.toString()), ...selectedCells};
+
+        // 기존 문서 업데이트
+        await _firestore.collection('selected_cells').doc(existingDoc.id).update({
+          'cells': mergedCells.toList(),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // 새로운 문서 생성
+        await _firestore.collection('selected_cells').add({
+          'userId': _userId,
+          'cells': selectedCells,
+          'weekStart': {
+            'year': weekStart.year,
+            'month': weekStart.month,
+            'day': weekStart.day,
+          },
+          'weekEnd': {
+            'year': weekEnd.year,
+            'month': weekEnd.month,
+            'day': weekEnd.day,
+          },
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("데이터가 성공적으로 저장되었습니다!"))
+      );
+    } catch (e) {
+      print('Error saving selected cells: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("데이터 저장에 실패했습니다: $e"))
+      );
+    }
   }
+
 
   DateTime _getCurrentStartOfWeek() {
     DateTime now = DateTime.now().add(Duration(days: _weekOffset * 7));

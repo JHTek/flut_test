@@ -68,7 +68,7 @@ class _ResultPageState extends State<ResultPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('결과 화면'),
+        title: Text('개인 가용시간'),
         backgroundColor: Colors.green,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),

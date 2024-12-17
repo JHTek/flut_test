@@ -11,7 +11,7 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('로그인 페이지'),
+        title: Text('로그인'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

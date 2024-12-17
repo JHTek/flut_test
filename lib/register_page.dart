@@ -11,7 +11,7 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('회원가입 페이지'),
+        title: Text('회원가입'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -84,7 +84,7 @@ class _HomeState extends State<Home> {
                   MaterialPageRoute(builder: (context) => CalendarPage()),
                 );
               },
-              child: Text('캘린더 페이지로 이동'),
+              child: Text('개인 일정 입력하기'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
@@ -104,7 +104,7 @@ class _HomeState extends State<Home> {
                   MaterialPageRoute(builder: (context) => CreateTeamPage()),
                 );
               },
-              child: Text('팀 생성 페이지로 이동'),
+              child: Text('팀 생성하기'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
@@ -114,7 +114,7 @@ class _HomeState extends State<Home> {
                   MaterialPageRoute(builder: (context) => ViewTeamsPage()),
                 );
               },
-              child: Text('팀 확인 페이지로 이동'),
+              child: Text('나의 팀 확인'),
             ),
             SizedBox(height: 20),
           ],

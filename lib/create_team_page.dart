@@ -38,7 +38,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
           members.add(uid);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Email $email is not registered. Please enter a valid email.')),
+            SnackBar(content: Text('Email $email 은 등록되지 않았습니다. 올바른 이메일을 입력해 주십시오.')),
           );
           return;
         }
@@ -56,7 +56,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Team "$teamName" created successfully!'))
+          SnackBar(content: Text('Team "$teamName" 이 성공적으로 저장되었습니다!'))
       );
 
       _teamNameController.clear();
@@ -71,7 +71,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('팀 생성 페이지'),
+        title: Text('팀 생성'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
